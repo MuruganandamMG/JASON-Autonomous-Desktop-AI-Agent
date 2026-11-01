@@ -7,6 +7,8 @@ import re
 import shutil
 import threading
 import uuid
+import sys
+from pathlib import Path
 from contextlib import suppress
 from .winprocess import Job
 
@@ -14,7 +16,10 @@ ANSI = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]|\x1b\][^\x07]*(?:\x07|\x1b\\)")
 
 def child_env():
     keys = {"systemroot","windir","path","pathext","temp","tmp","comspec","programfiles","programfiles(x86)","userprofile","localappdata","appdata"}
-    return {k:v for k,v in os.environ.items() if k.lower() in keys}
+    env={k:v for k,v in os.environ.items() if k.lower() in keys}
+    path_key=next((k for k in env if k.lower()=='path'),'PATH')
+    env[path_key]=str(Path(sys.executable).parent)+os.pathsep+env.get(path_key,'')
+    return env
 
 @dataclass
 class Session:

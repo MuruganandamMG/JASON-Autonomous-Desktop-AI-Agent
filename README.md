@@ -42,7 +42,7 @@ Type an instruction while other jobs run. Examples:
 - “Open this project in VS Code, start the frontend in PS-1 and inspect its localhost page.”
 - “Run diagnostics in PS-2 and the backend in PS-3; keep the frontend alive.”
 
-Each task has an ID. Automatic routing uses Lite for light dialogue and Flash for action/coding requests. Use /flash TEXT when the wording does not select the desired route. Tool requests from a Lite route stop and ask you to resubmit on Flash.
+Each task has an ID. Describe your request normally: create/make/write requests select action routing, and any tool call on the light route continues automatically through the same local permission checks. No resubmission is needed. Bare /flash or /lite changes the mode; /auto restores automatic selection. Empty requests never start tasks.
 
 Only non-sensitive public/demo information may go to the free cloud service. **Content classification is human-assisted:** each exact chat input and newly read file version requires local public-content classification; shell/browser/search excerpts require classification before upload. The local approval shows the content to review. Known credential patterns are blocked, but automatic detection is not proof that arbitrary data is public. This adds approval steps intentionally; it does not silently send uncertain data for fully unattended operation.
 
@@ -51,6 +51,10 @@ Use /approve ID or /deny ID. Reversible project edit/open-VS-Code grants can be 
 Read a file before writing: the tool requires its current SHA-256; new files use an empty expected hash. Existing content is backed up locally. Concurrent changes are refused. This protects recorded edits, not arbitrary shell side effects or unsaved editor buffers.
 
 ## Local controls
+
+App and working-folder controls work locally without an AI request: /apps lists installed Start Menu applications, /app NAME launches a selected app, /terminal opens a visible owned PowerShell window, and /cd PATH changes the default working folder. Model tools expose the same app discovery/launch and terminal capabilities. /retry TASK-ID starts a fresh inspected reattempt of prior work. /tasks and common completion questions display actual task states immediately, without waiting for Gemini. Waiting approvals do not occupy conversation capacity. /stop all closes both visible owned terminals and managed shell sessions.
+
+Applications are launched through installed executable paths/shortcuts, not arbitrary shell evaluation. This is app launching and terminal management, not universal mouse/keyboard control of every Windows app. Command execution, file changes and cloud-bound excerpts retain their approval boundaries.
 
 | Control | Behavior |
 |---|---|

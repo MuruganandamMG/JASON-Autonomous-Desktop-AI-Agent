@@ -14,6 +14,9 @@ class Browser:
         self.driver=None
         self.context=None
         self.revision=0
+        self.authorize_origin=None
+    def allowed(self,destination):
+        return self.authorize_origin(destination) if self.authorize_origin else destination in self.origins
     async def start(self):
         if self.page: return
         from playwright.async_api import async_playwright
@@ -22,7 +25,7 @@ class Browser:
         self.browser=await self.driver.chromium.launch(headless=self.headless,channel=self.channel,env=child_env())
         self.context=await self.browser.new_context(accept_downloads=False,service_workers="block")
         async def route(r):
-            try: allowed=origin(r.request.url) in self.origins
+            try: allowed=self.allowed(origin(r.request.url))
             except ValueError: allowed=False
             if r.request.resource_type=="document" and not allowed:
                 await r.abort()
@@ -30,14 +33,14 @@ class Browser:
         await self.context.route("**/*",route)
         self.page=await self.context.new_page()
     async def navigate(self,url):
-        if origin(url) not in self.origins: raise ValueError("Origin not approved.")
+        if not self.allowed(origin(url)): raise ValueError("Origin not approved.")
         await self.start()
         self.revision+=1
         await self.page.goto(url,wait_until="domcontentloaded",timeout=20000)
         return await self.inspect()
     async def inspect(self):
         if not self.page: raise ValueError("Navigate first.")
-        if origin(self.page.url) not in self.origins: raise ValueError("Redirected outside approved origins.")
+        if not self.allowed(origin(self.page.url)): raise ValueError("Redirected outside approved origins.")
         return {"url":self.page.url,"title":await self.page.title(),"text":(await self.page.locator("body").inner_text())[:12000]}
     async def interact(self,role,name,text=None):
         if not self.page: raise ValueError("Navigate first.")

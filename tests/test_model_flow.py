@@ -71,6 +71,7 @@ async def test_model_tool_continuation_and_history(tmp_path):
         assert (tmp_path/'hello.txt').read_text()=='Hello demo'
         assert next(t for t in r.store.tasks() if t['id']==tid)['state']=='SUCCEEDED'
         assert r.model.turns==2
+        assert not any(p.function_call or p.function_response for c in r.history for p in c.parts)
         assert any('function_response' in str(c) for c in r.model.requests[1])
         tid=r.submit('What did you just write?','lite')
         await finish_with_approvals(r,tid)
