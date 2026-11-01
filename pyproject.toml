@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=75"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "jason-desktop-agent"
+version = "0.1.0"
+description = "Free-tier Gemini Windows terminal agent"
+requires-python = ">=3.12"
+dependencies = ["google-genai>=2.34,<3", "prompt_toolkit>=3.0.53,<4", "playwright>=1.64,<2", "pywinpty>=3.1.2,<4; sys_platform == 'win32'", "python-dotenv>=1.2,<2", "tzdata>=2025"]
+
+[project.optional-dependencies]
+dev = ["pytest>=9,<10", "pytest-asyncio>=1.4,<2"]
+
+[project.scripts]
+jason = "jason.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+

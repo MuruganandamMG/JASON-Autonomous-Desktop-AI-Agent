@@ -1,0 +1,13 @@
+.venv/
+.env
+config.toml
+.env.*
+!.env.example
+.jason/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+build/
+dist/
+
