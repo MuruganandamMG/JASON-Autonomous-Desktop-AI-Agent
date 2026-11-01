@@ -14,9 +14,23 @@ class Workspace:
             raise PolicyError("File too large; request a smaller excerpt.")
         content = self.policy.public_text(p.read_text(encoding="utf-8"))
         return {"path":path, "content":content, "sha256":hashlib.sha256(p.read_bytes()).hexdigest()}
-    def list(self):
-        return [str(p.relative_to(self.policy.root)) for p in self.policy.root.iterdir()
+    def list(self,path="."):
+        directory=self.policy.path(path)
+        return [str(p.relative_to(self.policy.root)) for p in directory.iterdir()
                 if not p.name.startswith(".")][:200]
+    def search(self,path,query):
+        matches=[]
+        for p in self.policy.path(path).rglob("*"):
+            if len(matches)>=100: break
+            try:
+                self.policy.path(p)
+                if p.is_file() and p.stat().st_size<=128000:
+                    for line,text in enumerate(p.read_text(encoding="utf-8").splitlines(),1):
+                        if query.casefold() in text.casefold():
+                            matches.append({"path":str(p.relative_to(self.policy.root)),"line":line,"text":text[:500]})
+                            if len(matches)>=100: break
+            except (PolicyError,UnicodeError,OSError): continue
+        return matches
     def write(self, path, content, expected_hash):
         p = self.policy.path(path)
         self.policy.public_text(content)

@@ -83,7 +83,11 @@ class Runtime:
                                 raise PolicyError("Quota configuration/context requires correction; resubmit after fixing it.")
                             if "Provider" in str(e) or "provider" in str(e):
                                 failures+=1
-                                if failures>4: raise PolicyError("Repeated provider exhaustion; stopped automatic retries. Retry after checking AI Studio.")
+                                if failures>4:
+                                    from .quota import pacific_reset
+                                    e.retry_at=pacific_reset(time.time())
+                                    failures=0
+                                    self.emit(f"[{tid}] Repeated exhaustion: waiting until next Pacific daily reset; no paid fallback.")
                             await asyncio.sleep(max(1,e.retry_at-time.time()))
                     if not parts: raise PolicyError("Empty/blocked model response; no actions executed.")
                     contents.append(types.Content(role="model",parts=parts))
@@ -101,7 +105,7 @@ class Runtime:
                         try:
                             result=await self.dispatch(tid,call.name,dict(call.args or {}),oid)
                             safe=self.policy.public_text(json.dumps(result,ensure_ascii=False))
-                            if call.name in ("shell_output","browser_navigate","browser_inspect","browser_click","browser_fill"):
+                            if call.name in ("search_files","shell_output","browser_navigate","browser_inspect","browser_click","browser_fill"):
                                 await self.require("public_excerpt",hashlib.sha256(safe.encode()).hexdigest(),"Review/classify this exact tool excerpt as non-sensitive public/demo before Gemini receives it:\n"+safe)
                             result=json.loads(safe)
                         except (PolicyError,ValueError,OSError) as e:
@@ -146,7 +150,7 @@ class Runtime:
                 raise PolicyError("Project script identities changed; review command again.")
             required.append(("command",identity))
         if name.startswith("browser_") and name not in ("browser_navigate","browser_inspect"):
-            identity=hashlib.sha256(json.dumps([self.browser.page.url if self.browser.page else "",name,args],sort_keys=True).encode()).hexdigest()
+            identity=hashlib.sha256(json.dumps([self.browser.revision,self.browser.page.url if self.browser.page else "",name,args],sort_keys=True).encode()).hexdigest()
             await self.require("browser_effect",identity,"Allow this demo browser effect: "+json.dumps(args))
             required.append(("browser_effect",identity))
         await self.paused.wait()
@@ -160,7 +164,7 @@ class Runtime:
             if name=="shell_run" and identity!=self.policy.command_identity(args["command"]):
                 raise PolicyError("Script changed before dispatch.")
             if name.startswith("browser_") and name not in ("browser_navigate","browser_inspect"):
-                current=hashlib.sha256(json.dumps([self.browser.page.url if self.browser.page else "",name,args],sort_keys=True).encode()).hexdigest()
+                current=hashlib.sha256(json.dumps([self.browser.revision,self.browser.page.url if self.browser.page else "",name,args],sort_keys=True).encode()).hexdigest()
                 if current!=identity: raise PolicyError("Browser page changed after approval.")
             existing=self.store.operation_result(oid)
             if existing:
@@ -172,12 +176,16 @@ class Runtime:
                 self.store.consume("command",identity)
             self.store.operation(oid,"dispatched")
             try:
-                if name=="list_files": result={"files":self.workspace.list()}
+                if name=="list_files": result={"files":self.workspace.list(args["path"])}
+                elif name=="search_files": result={"matches":self.workspace.search(args["path"],args["query"])}
                 elif name=="read_file": result=self.workspace.read(args["path"])
                 elif name=="write_file": result=self.workspace.write(args["path"],args["content"],args["expected_hash"])
                 elif name=="open_vscode": result=self.workspace.open_vscode()
                 elif name=="shell_run": result=await self.shells.run(args["slot"],args["command"],tid)
                 elif name=="shell_output": result={"output":self.shells.output(args["slot"]),"sessions":self.shells.status()}
+                elif name=="shell_stop":
+                    await self.shells.stop(args["slot"])
+                    result={"status":"stopped","session":args["slot"]}
                 elif name=="browser_navigate": result=await self.browser.navigate(args["url"])
                 elif name=="browser_inspect": result=await self.browser.inspect()
                 elif name=="browser_click": result=await self.browser.interact(args["role"],args["name"])
@@ -206,4 +214,14 @@ class Runtime:
         await self.shells.close()
         if self.model: await self.model.close()
         self.store.db.close()
+
+    async def watch(self):
+        previous={}
+        while not self.closed:
+            for slot,status in self.shells.status().items():
+                before=previous.get(slot)
+                if before and (before['busy'] and not status['busy'] or before['running'] and not status['running']):
+                    self.emit(f"[PS-{slot}] state changed: "+json.dumps(status))
+                previous[slot]=status
+            await asyncio.sleep(1)
 

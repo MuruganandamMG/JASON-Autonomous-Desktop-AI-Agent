@@ -13,6 +13,7 @@ class Browser:
         self.page=None
         self.driver=None
         self.context=None
+        self.revision=0
     async def start(self):
         if self.page: return
         from playwright.async_api import async_playwright
@@ -31,6 +32,7 @@ class Browser:
     async def navigate(self,url):
         if origin(url) not in self.origins: raise ValueError("Origin not approved.")
         await self.start()
+        self.revision+=1
         await self.page.goto(url,wait_until="domcontentloaded",timeout=20000)
         return await self.inspect()
     async def inspect(self):
@@ -40,6 +42,7 @@ class Browser:
     async def interact(self,role,name,text=None):
         if not self.page: raise ValueError("Navigate first.")
         locator=self.page.get_by_role(role,name=name,exact=True)
+        self.revision+=1
         if text is None: await locator.click(timeout=5000)
         else: await locator.fill(text,timeout=5000)
         return await self.inspect()

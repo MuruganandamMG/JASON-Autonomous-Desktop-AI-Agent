@@ -10,7 +10,7 @@ requires-python = ">=3.12"
 dependencies = ["google-genai>=2.34,<3", "prompt_toolkit>=3.0.53,<4", "playwright>=1.64,<2", "pywinpty>=3.1.2,<4; sys_platform == 'win32'", "python-dotenv>=1.2,<2", "tzdata>=2025"]
 
 [project.optional-dependencies]
-dev = ["pytest>=9,<10", "pytest-asyncio>=1.4,<2"]
+dev = ["pytest>=9,<10", "pytest-asyncio>=1.4,<2", "pytest-timeout>=2.4,<3"]
 
 [project.scripts]
 jason = "jason.cli:main"

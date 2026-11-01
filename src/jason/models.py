@@ -6,12 +6,14 @@ from .policy import PolicyError
 from .quota import QuotaWait, pacific_reset
 
 TOOL_FIELDS={
- "list_files":{},
+ "list_files":{"path":"string"},
+ "search_files":{"path":"string","query":"string"},
  "read_file":{"path":"string"},
  "write_file":{"path":"string","content":"string","expected_hash":"string"},
  "open_vscode":{},
  "shell_run":{"slot":"integer","command":"string"},
  "shell_output":{"slot":"integer"},
+ "shell_stop":{"slot":"integer"},
  "browser_navigate":{"url":"string"},
  "browser_inspect":{},
  "browser_click":{"role":"string","name":"string"},

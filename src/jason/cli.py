@@ -1,6 +1,8 @@
 import argparse
 import asyncio
 import json
+import sys
+from contextlib import nullcontext
 from pathlib import Path
 from prompt_toolkit import PromptSession
 from prompt_toolkit.patch_stdout import patch_stdout
@@ -15,11 +17,18 @@ Only public/demo content may be submitted. Local commands work with no API key."
 
 async def interact(settings,state):
     runtime=Runtime(settings,state)
-    session=PromptSession()
+    watcher=asyncio.create_task(runtime.watch())
+    interactive=sys.stdin.isatty() and sys.stdout.isatty()
+    class PipePrompt:
+        async def prompt_async(self,prompt):
+            line=await asyncio.to_thread(sys.stdin.readline)
+            if not line: raise EOFError
+            return line
+    session=PromptSession() if interactive else PipePrompt()
     print("JASON 0.1 — live terminal agent. "+("Gemini enabled." if runtime.model else "AI offline; configure Free-tier setup."))
     print(HELP)
     try:
-        with patch_stdout():
+        with patch_stdout() if interactive else nullcontext():
             while True:
                 try:
                     text=(await session.prompt_async("You > ")).strip()
@@ -53,6 +62,8 @@ async def interact(settings,state):
                 except Exception as e:
                     print(str(e))
     finally:
+        watcher.cancel()
+        await asyncio.gather(watcher,return_exceptions=True)
         await runtime.close()
 
 def main():
