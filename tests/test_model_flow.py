@@ -56,4 +56,3 @@ async def test_quota_wait_resumes_without_replaying_mutation(tmp_path):
         assert (tmp_path/'hello.txt').read_text()=='Hello demo'
         assert r.model.turns==2
     finally: await r.close()
-

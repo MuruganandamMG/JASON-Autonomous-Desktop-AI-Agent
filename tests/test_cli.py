@@ -7,4 +7,3 @@ def test_cli_piped_local_controls_do_not_require_console(tmp_path):
     assert result.returncode==0,result.stderr
     assert 'JASON' in result.stdout
     assert '[]' in result.stdout
-

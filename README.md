@@ -100,4 +100,3 @@ Tests include real Windows PowerShell sessions, Job Object ownership, child envi
 ## Branches and progress
 
 main preserves the approved planning baseline; feat/jason-runtime contains implementation and tests. No worktrees are used. See [TRACKER.md](TRACKER.md), [design](docs/superpowers/specs/2026-11-01-jason-design.md), and [implementation plan](docs/superpowers/plans/2026-11-01-jason.md). Pushes are normal fast-forward branch updates; no force push is required.
-

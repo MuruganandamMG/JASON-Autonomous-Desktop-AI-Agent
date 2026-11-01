@@ -45,4 +45,3 @@ async def test_frontend_diagnostics_backend_selective_stop(tmp_path):
     finally:
         await browser.close()
         await shells.close()
-
