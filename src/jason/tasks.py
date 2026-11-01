@@ -9,7 +9,7 @@ from .config import Settings
 from .store import Store
 from .policy import Policy, PolicyError
 from .quota import Quota, QuotaWait
-from .models import Gemini, TOOL_FIELDS
+from .models import Gemini, TOOL_FIELDS, ProviderTransient
 from .workspace import Workspace
 from .shells import Shells
 from .browser import Browser
@@ -75,6 +75,14 @@ class Runtime:
                                         parts.append(part)
                                         if part.text: self.emit(f"[{tid}] {part.text}")
                             break
+                        except ProviderTransient as e:
+                            failures+=1
+                            if failures>4:
+                                raise PolicyError("Gemini service retry limit reached; your task has stopped safely. Try again shortly. No paid fallback was used.")
+                            delay=max(0,e.retry_at-time.time())*(2**(failures-1))
+                            self.store.task(tid,"WAITING_FOR_PROVIDER",text)
+                            self.emit(f"[{tid}] {e} Retrying in {delay:.0f}s (attempt {failures}/4); /stop {tid} cancels.")
+                            await asyncio.sleep(delay)
                         except QuotaWait as e:
                             self.store.task(tid,"WAITING_FOR_QUOTA",text)
                             self.emit(f"[{tid}] {e}")

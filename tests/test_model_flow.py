@@ -5,6 +5,42 @@ from jason.tasks import Runtime
 from jason.config import Settings
 from jason.quota import QuotaWait
 
+async def test_temporary_provider_failure_has_bounded_retries(tmp_path):
+    from jason.models import ProviderTransient
+    class Broken(Model):
+        async def stream(self,contents,route):
+            self.turns+=1
+            raise ProviderTransient(503,delay=0)
+            yield
+    messages=[]
+    r=Runtime(Settings(root=str(tmp_path)),tmp_path/'.state',emit=messages.append)
+    r.model=Broken()
+    try:
+        tid=r.submit('hello','lite')
+        await asyncio.wait_for(r.jobs[tid],8)
+        assert r.model.turns==5
+        assert next(t for t in r.store.tasks() if t['id']==tid)['state']=='FAILED'
+        assert any('retry limit' in m.lower() for m in messages)
+        assert not any('daily reset' in m for m in messages)
+    finally: await r.close()
+
+async def test_provider_wait_can_be_stopped_locally(tmp_path):
+    from jason.models import ProviderTransient
+    class Waiting(Model):
+        async def stream(self,contents,route):
+            raise ProviderTransient(503,delay=30)
+            yield
+    r=Runtime(Settings(root=str(tmp_path)),tmp_path/'.state',emit=lambda x:None)
+    r.model=Waiting()
+    try:
+        tid=r.submit('hello','lite')
+        for _ in range(100):
+            if next(t['state'] for t in r.store.tasks() if t['id']==tid)=='WAITING_FOR_PROVIDER': break
+            await asyncio.sleep(.01)
+        await asyncio.wait_for(r.stop('all'),1)
+        assert r.jobs[tid].cancelled()
+    finally: await r.close()
+
 class Model:
     def __init__(self):
         self.turns=0

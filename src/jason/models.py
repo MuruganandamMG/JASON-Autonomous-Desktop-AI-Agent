@@ -35,12 +35,17 @@ Do not request credentials, personal data, paid features, admin changes, publish
 A denied action is not permission to bypass it through another tool. Ask clarification for ambiguous tasks.
 """
 
+class ProviderTransient(Exception):
+    def __init__(self, code, delay=5):
+        super().__init__(f"Gemini temporarily unavailable (HTTP {code}).")
+        self.retry_at=time.time()+delay
+
 class Gemini:
     def __init__(self,settings,quota,policy,key):
         from google import genai
         from google.genai import types
         self.s,self.quota,self.policy=settings,quota,policy
-        self.client=genai.Client(api_key=key,http_options=types.HttpOptions(retry_options=types.HttpRetryOptions(attempts=1)))
+        self.client=genai.Client(api_key=key,http_options=types.HttpOptions(timeout=60000,retry_options=types.HttpRetryOptions(attempts=1)))
         self.lock=asyncio.Lock()
     async def stream(self,contents,route):
         from google.genai import types
@@ -71,7 +76,10 @@ class Gemini:
                     self.quota.cooldowns[model]=time.time()+60
                     raise QuotaWait("Provider quota exhausted; retrying after cooldown (remaining quota unknown).",time.time()+60) from None
                 if code in (500,502,503,504):
-                    raise QuotaWait("Transient provider failure.",time.time()+5) from None
+                    raise ProviderTransient(code) from None
+                import httpx
+                if isinstance(e,(TimeoutError,httpx.TimeoutException)):
+                    raise ProviderTransient("timeout") from None
                 raise RuntimeError("Gemini request failed; inspect project access/model settings. Provider error code: "+str(code)) from None
     async def close(self):
         await self.client.aio.aclose()

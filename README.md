@@ -86,7 +86,7 @@ AI-dependent work waits when quota is exhausted. Local status/stop commands and 
 
 Tests include real Windows PowerShell sessions, Job Object ownership, child environment exclusion, local Edge navigation/clicks/redirect blocking, a frontend + diagnostics + backend demonstration, data/path checks, quota clocks, mocked Gemini tool continuation, approval revocation and cancellation races. One junction/symlink test can skip when Windows does not permit creating symlinks.
 
-**Live Gemini validation is pending your key and verified Free project.** The test suite uses captured SDK data types/fake provider output, not a paid or live Gemini request. Run a small public/demo conversation and tool workflow after setup to validate your actual account/model contract.
+**Live Gemini validation completed on November 1, 2026 for the configured local Free project:** interactive greeting, conversation follow-up, file creation and readback passed. The automated suite uses SDK data types/fake provider output for deterministic failure checks. New installations still need their own key/project setup and smoke test. Temporary provider errors now show bounded retry progress; network requests time out after 60 seconds, and local stop remains available during backoff.
 
 ## Current limits
 
