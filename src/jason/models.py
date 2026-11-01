@@ -46,7 +46,7 @@ class Gemini:
         from google.genai import types
         if not self.s.ai_ready: raise PolicyError("Verify today's eligible non-billing Free project first.")
         model=self.s.flash_model if route=="flash" else self.s.lite_model
-        if model not in {"gemini-3.5-flash-lite","gemini-3.8-flash"}:
+        if model not in {"gemini-3.1-flash-lite","gemini-3.5-flash-lite","gemini-3.8-flash"}:
             raise PolicyError("Model not in the reviewed free-model allowlist; update eligibility evidence before adding a model.")
         serialized=json.dumps(contents,default=lambda x:x.model_dump(mode="json",exclude_none=True),ensure_ascii=False)
         self.policy.public_text(serialized)

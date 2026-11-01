@@ -5,6 +5,7 @@ Plan: docs/superpowers/plans/2026-11-01-jason.md
 Branch: feat/jason-runtime. User authorized implementation, branch management and pushes; no worktrees. GitHub is the only requested remote access.
 
 ## Decisions
+- Added gemini-3.1-flash-lite to the reviewed model gate. User's Free-tier screenshot shows 15 RPM, 250,000 input TPM and 500 RPD; local ignored config uses that model for both routes until the obscured 3.5 quotas are supplied. Model reference: https://ai.google.dev/gemini-api/docs/models/gemini-3.1-flash-lite . No real inference request was made.
 - User subsequently approved normal chat without a demo-workspace requirement and local access in any folder. Implemented workspace.any_folder (default true), per-destination edit grants and external-path listing/search support. Sensitive-path/content screens and cloud-excerpt classification remain active; API eligibility checks are unchanged.
 - Use normal feature branch; preserve main documentation baseline.
 - Use installed development virtual environment to verify; standalone Python/PowerShell are prerequisites for user setup.
