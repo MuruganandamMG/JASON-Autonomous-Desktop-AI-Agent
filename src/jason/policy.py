@@ -5,12 +5,11 @@ from pathlib import Path
 class PolicyError(Exception): pass
 
 class Policy:
-    def __init__(self, root, public_demo):
+    def __init__(self, root, public_demo, any_folder=False):
         self.root = Path(root).resolve()
         self.public_demo = public_demo
+        self.any_folder = any_folder
     def public_text(self, text):
-        if not self.public_demo:
-            raise PolicyError("Opt into a non-sensitive public/demo workspace first.")
         patterns = [
             r"(?i)(api[_-]?key|token|password|secret)\s*[:=]\s*\S+",
             r"AIza[\w-]{20,}", r"-----BEGIN .*PRIVATE KEY",
@@ -24,11 +23,11 @@ class Policy:
         return text
     def path(self, relative):
         p = (self.root / relative).resolve()
-        if not p.is_relative_to(self.root):
+        if not self.any_folder and not p.is_relative_to(self.root):
             raise PolicyError("Path is outside the approved root.")
         forbidden = {".git", ".jason", ".venv", "node_modules", "id_rsa", "id_ed25519", "credentials.json"}
         if any(part.lower() in forbidden or part.lower().startswith(".env") or
-               part.lower().endswith((".pem", ".key", ".pfx")) for part in p.relative_to(self.root).parts):
+               part.lower().endswith((".pem", ".key", ".pfx")) for part in p.parts):
             raise PolicyError("Sensitive or internal path is excluded.")
         return p
     def command_identity(self, command):

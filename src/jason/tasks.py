@@ -18,7 +18,7 @@ class Runtime:
     def __init__(self, settings, state, emit=print):
         self.s,self.emit=settings,emit
         self.store=Store(Path(state)/"state.db")
-        self.policy=Policy(settings.root,settings.public_demo)
+        self.policy=Policy(settings.root,settings.public_demo,any_folder=settings.any_folder)
         self.workspace=Workspace(self.policy,Path(state)/"backups")
         self.shells=Shells(self.policy.root)
         self.browser=Browser(settings.origins)
@@ -62,7 +62,6 @@ class Runtime:
         try:
             async with self.capacity:
                 if not self.model: raise PolicyError("AI offline: configure a verified Free project, actual quotas and your local GEMINI_API_KEY.")
-                await self.require("public_chat",hashlib.sha256(text.encode()).hexdigest(),"Classify this exact input as non-sensitive public/demo text for free Gemini: "+text)
                 for step in range(20):
                     await self.paused.wait()
                     self.store.task(tid,"RUNNING",text)
@@ -134,6 +133,9 @@ class Runtime:
             if previous["state"]=="completed": return json.loads(previous["result"])
             raise PolicyError("Operation outcome uncertain; inspect before retrying.")
         root_id=hashlib.sha256(str(self.policy.root).encode()).hexdigest()
+        if name=="write_file":
+            target=self.policy.path(args["path"])
+            root_id=hashlib.sha256(("folder:"+str(target.parent)).encode()).hexdigest()
         required=[]
         if name=="read_file":
             preview=self.workspace.read(args["path"])
@@ -141,7 +143,7 @@ class Runtime:
             await self.require("public_file",public_id,"Classify this exact file version as non-sensitive public/demo:\n"+json.dumps(preview,ensure_ascii=False))
             required.append(("public_file",public_id))
         if name in ("write_file","open_vscode"):
-            await self.require("workspace",root_id,"Allow reversible edits/open VS Code in the configured PUBLIC/DEMO project?")
+            await self.require("workspace",root_id,"Allow reversible edits/open VS Code in this local folder: "+str(target.parent if name=="write_file" else self.policy.root)+"? Cloud file contents still require public classification.")
             required.append(("workspace",root_id))
         if name=="shell_run":
             identity=self.policy.command_identity(args["command"])

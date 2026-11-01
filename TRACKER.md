@@ -5,6 +5,7 @@ Plan: docs/superpowers/plans/2026-11-01-jason.md
 Branch: feat/jason-runtime. User authorized implementation, branch management and pushes; no worktrees. GitHub is the only requested remote access.
 
 ## Decisions
+- User subsequently approved normal chat without a demo-workspace requirement and local access in any folder. Implemented workspace.any_folder (default true), per-destination edit grants and external-path listing/search support. Sensitive-path/content screens and cloud-excerpt classification remain active; API eligibility checks are unchanged.
 - Use normal feature branch; preserve main documentation baseline.
 - Use installed development virtual environment to verify; standalone Python/PowerShell are prerequisites for user setup.
 - Provider: supported async generateContent SDK API, manual function dispatch; no hosted tools.

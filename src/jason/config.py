@@ -18,6 +18,7 @@ class Settings:
     flash_rpd: int = 0
     root: str = "."
     public_demo: bool = False
+    any_folder: bool = True
     origins: tuple = ("https://example.com",)
     @classmethod
     def load(cls, path):
@@ -30,7 +31,7 @@ class Settings:
     def ai_ready(self):
         try:
             age = (date.today() - date.fromisoformat(self.verified_on)).days
-            return bool(self.free_project_verified and self.project_id and 0 <= age <= 1 and self.public_demo)
+            return bool(self.free_project_verified and self.project_id and 0 <= age <= 1)
         except ValueError:
             return False
     def limits(self, route):

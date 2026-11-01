@@ -1,5 +1,7 @@
 # JASON
 
+**Updated access behavior:** normal chat no longer requires a public/demo workspace or a per-message classification approval. Local file tools may work in any folder by default (workspace.any_folder=true); set it false to restore root confinement. Relative paths use the configured root; absolute paths can select other folders. Edit grants are scoped to each destination folder. Secret-path/content checks and explicit classification of cloud-bound file/browser/terminal excerpts remain active. Free-project verification, key and quota setup are still required for AI replies. Older public_demo instructions below are retained for compatibility; that flag no longer gates chat or AI readiness.
+
 JASON is a Windows terminal agent: streaming Gemini conversation, concurrent tasks, three persistent PowerShell sessions, project editing/VS Code launch, and browser automation. The initial version uses Gemini Free-tier projects only. It does not run a remote-control server; GitHub is the configured remote.
 
 ## Install

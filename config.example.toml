@@ -14,6 +14,7 @@ flash_tpm = 0
 flash_rpd = 0
 
 [workspace]
+any_folder = true
 root = "."
 public_demo = false
 # Only these browser origins are available. Include your demo server port.

@@ -16,7 +16,7 @@ class Workspace:
         return {"path":path, "content":content, "sha256":hashlib.sha256(p.read_bytes()).hexdigest()}
     def list(self,path="."):
         directory=self.policy.path(path)
-        return [str(p.relative_to(self.policy.root)) for p in directory.iterdir()
+        return [str(p.relative_to(self.policy.root) if p.is_relative_to(self.policy.root) else p) for p in directory.iterdir()
                 if not p.name.startswith(".")][:200]
     def search(self,path,query):
         matches=[]
@@ -27,7 +27,7 @@ class Workspace:
                 if p.is_file() and p.stat().st_size<=128000:
                     for line,text in enumerate(p.read_text(encoding="utf-8").splitlines(),1):
                         if query.casefold() in text.casefold():
-                            matches.append({"path":str(p.relative_to(self.policy.root)),"line":line,"text":text[:500]})
+                            matches.append({"path":str(p.relative_to(self.policy.root) if p.is_relative_to(self.policy.root) else p),"line":line,"text":text[:500]})
                             if len(matches)>=100: break
             except (PolicyError,UnicodeError,OSError): continue
         return matches
