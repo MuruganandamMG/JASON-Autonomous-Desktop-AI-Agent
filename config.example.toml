@@ -1,0 +1,21 @@
+# Copy to config.toml. No API key belongs in this file.
+[ai]
+free_project_verified = false
+project_id = ""
+verified_on = ""
+lite_model = "gemini-3.5-flash-lite"
+flash_model = "gemini-3.8-flash"
+# Copy actual limits from your Free project's AI Studio. Zero blocks AI.
+lite_rpm = 0
+lite_tpm = 0
+lite_rpd = 0
+flash_rpm = 0
+flash_tpm = 0
+flash_rpd = 0
+
+[workspace]
+root = "."
+public_demo = false
+# Only these browser origins are available. Include your demo server port.
+origins = ["https://example.com", "http://localhost:5173"]
+
